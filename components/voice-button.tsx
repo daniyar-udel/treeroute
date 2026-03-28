@@ -66,9 +66,12 @@ export function VoiceButton({ onResult, disabled }: VoiceButtonProps) {
     recognition.onstart = () => setState("listening");
 
     recognition.onresult = (event: ISpeechRecognitionEvent) => {
-      const text = event.results[event.results.length - 1][0].transcript;
-      transcriptRef.current = text;
-      setTranscript(text);
+      let full = "";
+      for (let i = 0; i < event.results.length; i++) {
+        full += event.results[i][0].transcript;
+      }
+      transcriptRef.current = full.trim();
+      setTranscript(full.trim());
     };
 
     recognition.onerror = () => {
