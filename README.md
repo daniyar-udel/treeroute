@@ -4,6 +4,7 @@
 
 Built for the NYC Build With AI Hackathon using Google GenAI SDK, Gemini 2.5 Flash, ADK agent architecture, and the NYC 2015 Street Tree Census.
 
+https://docs.google.com/presentation/d/1Kf7AQ54lSMRo7GjB3PVdwe48MnMswPF4Mdgl18ub_s0/edit?usp=sharing
 ---
 
 ## Multimodal experience
