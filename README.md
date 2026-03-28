@@ -180,7 +180,7 @@ gcloud run deploy treeroute \
 
 | Name | GitHub |
 |---|---|
-| Daniyar | [@daniyar-udel](https://github.com/daniyar-udel) |
+| Daniyar Abykhanov | [@daniyar-udel](https://github.com/daniyar-udel) |
 | Vera Vecherskaia | [@vvchrsk](https://github.com/vvchrsk) |
 | Daniel Naumov | [@dnauminator](https://github.com/dnauminator) |
 | Beibarys Nyussupov | [@NBeibarys](https://github.com/NBeibarys) |
