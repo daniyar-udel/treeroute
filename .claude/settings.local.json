@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:nyc-hackathon-website-789872749985.us-central1.run.app)",
+      "Bash(npm run:*)",
+      "Bash(curl -s -H \"x-goog-api-key: AIzaSyAuWtWUCSY92XQyJpShInKOdw3J6fsgBa4\" \"https://generativelanguage.googleapis.com/v1beta/models\")",
+      "Bash(sleep 5 echo \"=== voice-parse ===\" curl -s -X POST http://localhost:3000/api/voice-parse -H \"Content-Type: application/json\" -d '{\"\"\"\"transcript\"\"\"\":\"\"\"\"find me a route from Washington Square Park to Central Park\"\"\"\"}' 2)",
+      "Bash(1 echo:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''Gemini summary:'''', d.get\\(''''summary'''',''''''''\\)\\); print\\(''''Routes:'''', len\\(d.get\\(''''routes'''',[]\\)\\)\\); [print\\(f''''  {r[\"\"label\"\"]}: {r[\"\"exposureLevel\"\"]} \\({r[\"\"exposureScore\"\"]}\\) — {r[\"\"explanation\"\"][:60]}''''\\) for r in d.get\\(''''routes'''',[]\\)]\")",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

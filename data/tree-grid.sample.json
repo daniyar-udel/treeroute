@@ -1,0 +1,165 @@
+{
+  "version": "demo-2026-03-28",
+  "origin": {
+    "lat": 40.68,
+    "lng": -74.03
+  },
+  "latStep": 0.012,
+  "lngStep": 0.014,
+  "cellSizeMeters": 1100,
+  "cells": [
+    {
+      "key": "5:2",
+      "center": { "lat": 40.74, "lng": -74.002 },
+      "areaName": "West Village canopy corridor",
+      "density": 0.71,
+      "canopyScore": 44,
+      "topSpecies": ["London plane", "Honey locust", "Maple"],
+      "speciesWeights": { "london plane": 0.26, "honey locust": 0.21, "maple": 0.17, "tree": 0.12 }
+    },
+    {
+      "key": "6:2",
+      "center": { "lat": 40.752, "lng": -73.998 },
+      "areaName": "Midtown west avenue canyon",
+      "density": 0.39,
+      "canopyScore": 28,
+      "topSpecies": ["Honey locust", "Elm"],
+      "speciesWeights": { "honey locust": 0.14, "elm": 0.18, "tree": 0.1 }
+    },
+    {
+      "key": "7:2",
+      "center": { "lat": 40.764, "lng": -73.998 },
+      "areaName": "Columbus Circle edge",
+      "density": 0.58,
+      "canopyScore": 49,
+      "topSpecies": ["Oak", "Elm", "London plane"],
+      "speciesWeights": { "oak": 0.28, "elm": 0.18, "london plane": 0.22, "tree": 0.14 }
+    },
+    {
+      "key": "8:2",
+      "center": { "lat": 40.776, "lng": -73.998 },
+      "areaName": "Upper west side park edge",
+      "density": 0.75,
+      "canopyScore": 63,
+      "topSpecies": ["Oak", "Maple", "London plane"],
+      "speciesWeights": { "oak": 0.32, "maple": 0.21, "london plane": 0.19, "tree": 0.16 }
+    },
+    {
+      "key": "8:3",
+      "center": { "lat": 40.776, "lng": -73.984 },
+      "areaName": "Central Park west fringe",
+      "density": 0.82,
+      "canopyScore": 72,
+      "topSpecies": ["Oak", "Birch", "Maple"],
+      "speciesWeights": { "oak": 0.31, "birch": 0.23, "maple": 0.19, "tree": 0.19 }
+    },
+    {
+      "key": "9:3",
+      "center": { "lat": 40.788, "lng": -73.984 },
+      "areaName": "Reservoir-adjacent canopy pocket",
+      "density": 0.85,
+      "canopyScore": 78,
+      "topSpecies": ["Oak", "Birch", "Elm"],
+      "speciesWeights": { "oak": 0.33, "birch": 0.28, "elm": 0.16, "tree": 0.2 }
+    },
+    {
+      "key": "7:3",
+      "center": { "lat": 40.764, "lng": -73.984 },
+      "areaName": "Broadway mixed street canopy",
+      "density": 0.64,
+      "canopyScore": 56,
+      "topSpecies": ["London plane", "Elm", "Ginkgo"],
+      "speciesWeights": { "london plane": 0.22, "elm": 0.19, "tree": 0.15 }
+    },
+    {
+      "key": "6:3",
+      "center": { "lat": 40.752, "lng": -73.984 },
+      "areaName": "Bryant Park adjacency",
+      "density": 0.67,
+      "canopyScore": 52,
+      "topSpecies": ["London plane", "Maple", "Oak"],
+      "speciesWeights": { "london plane": 0.21, "maple": 0.17, "oak": 0.23, "tree": 0.14 }
+    },
+    {
+      "key": "5:3",
+      "center": { "lat": 40.74, "lng": -73.984 },
+      "areaName": "Flatiron tree corridor",
+      "density": 0.6,
+      "canopyScore": 47,
+      "topSpecies": ["Honey locust", "Maple"],
+      "speciesWeights": { "honey locust": 0.19, "maple": 0.2, "tree": 0.12 }
+    },
+    {
+      "key": "5:4",
+      "center": { "lat": 40.74, "lng": -73.97 },
+      "areaName": "Gramercy shaded blocks",
+      "density": 0.73,
+      "canopyScore": 57,
+      "topSpecies": ["Oak", "Elm", "London plane"],
+      "speciesWeights": { "oak": 0.26, "elm": 0.18, "london plane": 0.2, "tree": 0.15 }
+    },
+    {
+      "key": "6:4",
+      "center": { "lat": 40.752, "lng": -73.97 },
+      "areaName": "Murray Hill side streets",
+      "density": 0.48,
+      "canopyScore": 37,
+      "topSpecies": ["Honey locust", "Callery pear"],
+      "speciesWeights": { "honey locust": 0.16, "tree": 0.1 }
+    },
+    {
+      "key": "7:4",
+      "center": { "lat": 40.764, "lng": -73.97 },
+      "areaName": "East midtown greenway approach",
+      "density": 0.54,
+      "canopyScore": 41,
+      "topSpecies": ["Elm", "London plane"],
+      "speciesWeights": { "elm": 0.17, "london plane": 0.18, "tree": 0.11 }
+    },
+    {
+      "key": "8:4",
+      "center": { "lat": 40.776, "lng": -73.97 },
+      "areaName": "Upper east side school corridor",
+      "density": 0.69,
+      "canopyScore": 58,
+      "topSpecies": ["Oak", "Maple", "Birch"],
+      "speciesWeights": { "oak": 0.27, "maple": 0.18, "birch": 0.2, "tree": 0.16 }
+    },
+    {
+      "key": "9:4",
+      "center": { "lat": 40.788, "lng": -73.97 },
+      "areaName": "East Harlem slope",
+      "density": 0.51,
+      "canopyScore": 39,
+      "topSpecies": ["Maple", "Elm"],
+      "speciesWeights": { "maple": 0.18, "elm": 0.15, "tree": 0.11 }
+    },
+    {
+      "key": "4:3",
+      "center": { "lat": 40.728, "lng": -73.984 },
+      "areaName": "Union Square crossing",
+      "density": 0.45,
+      "canopyScore": 33,
+      "topSpecies": ["Honey locust", "Elm"],
+      "speciesWeights": { "honey locust": 0.14, "elm": 0.16, "tree": 0.11 }
+    },
+    {
+      "key": "4:4",
+      "center": { "lat": 40.728, "lng": -73.97 },
+      "areaName": "StuyTown internal canopy",
+      "density": 0.79,
+      "canopyScore": 65,
+      "topSpecies": ["Maple", "Oak", "London plane"],
+      "speciesWeights": { "maple": 0.21, "oak": 0.25, "london plane": 0.2, "tree": 0.18 }
+    },
+    {
+      "key": "3:4",
+      "center": { "lat": 40.716, "lng": -73.97 },
+      "areaName": "Lower east side park cluster",
+      "density": 0.57,
+      "canopyScore": 46,
+      "topSpecies": ["London plane", "Elm"],
+      "speciesWeights": { "london plane": 0.2, "elm": 0.18, "tree": 0.13 }
+    }
+  ]
+}
