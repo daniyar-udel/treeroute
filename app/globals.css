@@ -101,8 +101,9 @@ input, textarea { color: var(--ink); }
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
-  min-height: 38px;
-  padding: 0 20px;
+  min-height: 42px;
+  padding: 0 28px;
+  white-space: nowrap;
   transition: background 140ms, border-color 140ms, color 140ms;
 }
 
@@ -644,11 +645,17 @@ input, textarea { color: var(--ink); }
 .toggle-row,
 .trigger-grid,
 .signal-row,
-.rationale-list,
-.planner-actions {
+.rationale-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.planner-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  align-items: center;
 }
 
 .toggle-chip,
