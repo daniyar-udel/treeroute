@@ -173,3 +173,14 @@ gcloud run deploy treeroute \
   --allow-unauthenticated \
   --set-env-vars GOOGLE_AI_API_KEY=...,GOOGLE_MAPS_API_KEY=...
 ```
+
+---
+
+## Team
+
+| Name | GitHub |
+|---|---|
+| Daniyar | [@daniyar-udel](https://github.com/daniyar-udel) |
+| Vera Vecherskaia | [@vvchrsk](https://github.com/vvchrsk) |
+| Daniel Naumov | [@dnauminator](https://github.com/dnauminator) |
+| Beibarys Nyussupov | [@NBeibarys](https://github.com/NBeibarys) |
