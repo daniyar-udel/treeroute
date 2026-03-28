@@ -30,20 +30,11 @@ export async function POST(request: NextRequest) {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
-      contents: [
-        JSON.stringify({
-          instructions: [
-            "Extract the walking origin and destination from the user's voice command.",
-            "Return valid JSON only with exactly two fields: origin and destination.",
-            "Both must be location names or addresses in New York City.",
-            "If only one location is mentioned, put it in destination and leave origin empty string.",
-            "If no locations found, return empty strings.",
-            "Do not add any text outside the JSON object.",
-          ],
-          transcript,
-          example_output: { origin: "Washington Square Park", destination: "Central Park" },
-        }),
-      ],
+      config: {
+        systemInstruction:
+          'You extract walking origin and destination from voice commands. Always respond with a single valid JSON object only — no markdown, no code fences, no extra text. The JSON must have exactly two string fields: "origin" and "destination". Both must be NYC location names. If only one location is mentioned, use empty string for origin. If no locations found, return {"origin":"","destination":""}.',
+      },
+      contents: [{ role: "user", parts: [{ text: `Extract origin and destination from this voice command: "${transcript}"` }] }],
     });
 
     const text = response.text ?? "";

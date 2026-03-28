@@ -98,13 +98,17 @@ export function VoiceButton({ onResult, disabled }: VoiceButtonProps) {
 
         const data = (await res.json()) as { origin?: string; destination?: string; error?: string };
 
-        if (!data.error) {
+        if (!data.error && (data.origin || data.destination)) {
           onResultRef.current(data.origin ?? "", data.destination ?? "");
+          setState("idle");
+        } else {
+          setState("error");
+          setTimeout(() => setState("idle"), 2500);
         }
       } catch {
-        // silent — user can type manually
+        setState("error");
+        setTimeout(() => setState("idle"), 2500);
       } finally {
-        setState("idle");
         setTranscript("");
         transcriptRef.current = "";
       }
@@ -127,7 +131,7 @@ export function VoiceButton({ onResult, disabled }: VoiceButtonProps) {
       : state === "processing"
         ? "Parsing route..."
         : state === "error"
-          ? "Voice not supported"
+          ? "Couldn't parse — try again"
           : "Speak your route";
 
   return (
