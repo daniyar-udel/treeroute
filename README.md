@@ -104,6 +104,7 @@ The app now runs as a split architecture:
 - `FastAPI` serves the runtime backend in `backend/app`
 
 The browser calls FastAPI directly using `NEXT_PUBLIC_FASTAPI_BASE_URL`.
+All runtime backend logic now lives in `backend/app`; the repo no longer carries a parallel TypeScript backend scoring path.
 
 Route analysis follows this path:
 
@@ -218,6 +219,7 @@ npm run build:readme-demo-gif
 | `backend/app/scoring.py` | Python route-scoring logic |
 | `backend/app/tree_grid.py` | Python tree-grid lookup and cache layer |
 | `backend/app/voice_parse.py` | Python voice-command parsing pipeline |
+| `backend/tests/test_scoring.py` | Backend unit coverage for route scoring behavior |
 | `lib/api/fastapi-client.ts` | Direct browser client for FastAPI |
 | `scripts/build-tree-grid.ts` | CSV-to-grid preprocessing script |
 
@@ -231,7 +233,10 @@ That sample is based on the NYC 2015 Street Tree Census and is used to score rou
 
 ## Deployment
 
-The app is configured for standalone Next.js output and includes a `Dockerfile` suitable for Cloud Run.
+The repo includes:
+
+- a root `Dockerfile` for the Next.js frontend
+- `backend/Dockerfile` for the FastAPI backend
 
 Example:
 

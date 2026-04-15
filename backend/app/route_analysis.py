@@ -58,8 +58,10 @@ async def analyze_route_request(request: RouteAnalysisRequest) -> RouteAnalysisR
         summary=copy["summary"],
         routingMode=routing_mode,
         dataSources=[
-            "Google Maps Routes API",
-            "Google Maps JavaScript API",
+            "Google Maps Geocoding API",
+            "Google Routes API",
+            "Google Pollen API",
+            "Google Weather API",
             "Gemini via Google GenAI SDK",
             "NYC 2015 Street Tree Census",
         ],

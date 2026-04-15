@@ -1,6 +1,7 @@
 # FastAPI Backend
 
 This folder is the runtime backend for the app.
+It is the only backend runtime path in the repo.
 
 ## Step By Step Architecture
 
@@ -19,7 +20,7 @@ This folder is the runtime backend for the app.
    Google Maps, Google Routes, Google Weather, Google Pollen, Gemini.
 
 5. `app/scoring.py`
-   Pure domain logic for ranking route exposure.
+   Pure domain logic for ranking route exposure. This is the single source of truth for scoring.
 
 6. `app/tree_grid.py`
    Loads the NYC tree-grid data and resolves nearby canopy cells.
@@ -71,6 +72,7 @@ CORS_ALLOW_ORIGINS=http://localhost:3000
 ```bash
 npm run verify
 npm run check:fastapi
+.\.venv\Scripts\python.exe -m unittest discover -s backend/tests
 ```
 
 ## Docker

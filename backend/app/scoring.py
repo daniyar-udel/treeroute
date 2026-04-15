@@ -1,13 +1,29 @@
 from __future__ import annotations
 
+import math
+from datetime import datetime
+
 from .geometry import clamp, decode_polyline, exposure_level_from_score, round_value, sample_route_points
-from .models import GoogleRoute, PollenSignal, RouteCandidate, RouteHotspot, UserProfile, WeatherSignal
-from .tree_grid import lookup_tree_cell
+from .models import ExposureLevel, GoogleRoute, PollenSignal, RouteCandidate, RouteHotspot, TreeGridCell, UserProfile, WeatherSignal
+from .tree_grid import lookup_tree_cells_in_radius
+
+TREE_EXPOSURE_RADIUS_METERS = 20
+DEFAULT_BURDEN = 18
 
 SENSITIVITY_MULTIPLIERS = {
     "low": 0.88,
     "medium": 1.0,
     "high": 1.22,
+}
+
+SPECIES_SEASON_FACTOR = {
+    "oak": [0.0, 0.0, 0.3, 1.0, 0.7, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "birch": [0.0, 0.1, 0.8, 1.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "maple": [0.0, 0.1, 1.0, 0.6, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "london plane": [0.0, 0.0, 0.2, 0.8, 1.0, 0.4, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "honey locust": [0.0, 0.0, 0.0, 0.2, 0.9, 1.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "elm": [0.0, 0.1, 1.0, 0.7, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "tree": [0.1, 0.2, 0.5, 0.8, 0.9, 0.8, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1],
 }
 
 TRIGGER_ALIASES = {
@@ -26,9 +42,11 @@ def score_routes(
     profile: UserProfile,
     weather: WeatherSignal,
     pollen: PollenSignal,
+    current_month: int | None = None,
 ):
+    month = normalize_month_index(current_month)
     scored = [
-        score_single_route(route, index, profile, weather, pollen)
+        score_single_route(route, index, profile, weather, pollen, month)
         for index, route in enumerate(routes)
     ]
     return sorted(scored, key=lambda entry: entry["candidate"].exposureScore)
@@ -40,14 +58,17 @@ def score_single_route(
     profile: UserProfile,
     weather: WeatherSignal,
     pollen: PollenSignal,
+    month: int,
 ):
     points = decode_polyline(route.polyline)
-    sampled_points = sample_route_points(points, 14)
+    sample_count = int(clamp(math.floor(route.distanceMeters / 120 + 0.5), 10, 40))
+    sampled_points = sample_route_points(points, sample_count)
+
     sensitivity = SENSITIVITY_MULTIPLIERS[profile.sensitivity]
     tree_matches = profile.triggers if profile.knowsTreeTriggers else []
     general_avoidance_mode = (not profile.knowsTreeTriggers) or (not tree_matches)
     route_time_boost = clamp(route.durationMin / 36, 0.7, 1.25)
-    pollen_boost = get_tree_pollen_boost(pollen)
+    pollen_factor = get_tree_pollen_factor(pollen)
     weather_boost = get_weather_boost(weather)
 
     aggregate_burden = 0.0
@@ -57,38 +78,45 @@ def score_single_route(
     hotspots: list[RouteHotspot] = []
 
     for point_index, point in enumerate(sampled_points):
-        cell = lookup_tree_cell(point)
-        if not cell:
-            continue
+        cells = lookup_tree_cells_in_radius(point, TREE_EXPOSURE_RADIUS_METERS)
 
-        species_boost = get_species_match_boost(
-            tree_matches,
-            cell.speciesWeights,
-            cell.topSpecies,
-            general_avoidance_mode,
-        )
-        burden = cell.canopyScore * species_boost
+        burden: float
+        area_name = "NYC corridor"
+
+        if not cells:
+            burden = DEFAULT_BURDEN
+        else:
+            merged = merge_cells(cells)
+            area_name = merged["area_name"]
+            seasonal_weights = apply_seasonality(merged["species_weights"], month)
+            species_boost = get_species_match_boost(
+                tree_matches,
+                seasonal_weights,
+                merged["top_species"],
+                general_avoidance_mode,
+            )
+            burden = merged["canopy_score"] * species_boost
+
         aggregate_burden += burden
         peak_burden = max(peak_burden, burden)
 
         if burden >= dominant_risk:
             dominant_risk = burden
-            dominant_area = cell.areaName
+            dominant_area = area_name
 
         hotspots.append(
             RouteHotspot(
                 lat=point.lat,
                 lng=point.lng,
-                label=f"{cell.areaName} hotspot {point_index + 1}",
+                label=f"{area_name} hotspot {point_index + 1}",
                 risk=round_value(burden, 0),
             )
         )
 
-    normalized_burden = aggregate_burden / len(sampled_points) if sampled_points else 18
+    normalized_burden = aggregate_burden / len(sampled_points) if sampled_points else DEFAULT_BURDEN
+    tree_part = normalized_burden * 0.28 + peak_burden * 0.12
     score = clamp(
-        (normalized_burden * 0.34 + peak_burden * 0.1 + pollen_boost * 5 + route_time_boost * 3)
-        * sensitivity
-        * weather_boost,
+        (tree_part * pollen_factor + route_time_boost * 3) * sensitivity * weather_boost,
         8,
         98,
     )
@@ -114,8 +142,67 @@ def score_single_route(
     }
 
 
-def get_tree_pollen_boost(pollen: PollenSignal):
-    return clamp(pollen.treeIndex + pollen.grassIndex * 0.12 + pollen.weedIndex * 0.08, 1, 5.5)
+def normalize_month_index(current_month: int | None):
+    if current_month is None:
+        return datetime.now().month - 1
+
+    return current_month % 12
+
+
+def merge_cells(cells: list[TreeGridCell]):
+    if len(cells) == 1:
+        cell = cells[0]
+        return {
+            "canopy_score": cell.canopyScore,
+            "species_weights": dict(cell.speciesWeights),
+            "top_species": list(cell.topSpecies),
+            "area_name": cell.areaName,
+        }
+
+    canopy_score = sum(cell.canopyScore for cell in cells) / len(cells)
+
+    all_species = {
+        species
+        for cell in cells
+        for species in cell.speciesWeights.keys()
+    }
+    species_weights: dict[str, float] = {}
+    for species in all_species:
+        average_weight = sum(cell.speciesWeights.get(species, 0.0) for cell in cells) / len(cells)
+        if average_weight > 0:
+            species_weights[species] = float(f"{average_weight:.2f}")
+
+    top_species = [
+        species
+        for species, _weight in sorted(
+            species_weights.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )[:4]
+    ]
+
+    densest_cell = max(cells, key=lambda cell: cell.canopyScore)
+    return {
+        "canopy_score": canopy_score,
+        "species_weights": species_weights,
+        "top_species": top_species,
+        "area_name": densest_cell.areaName,
+    }
+
+
+def apply_seasonality(species_weights: dict[str, float], month: int):
+    seasonal_weights: dict[str, float] = {}
+
+    for species, weight in species_weights.items():
+        factors = SPECIES_SEASON_FACTOR.get(species, SPECIES_SEASON_FACTOR["tree"])
+        seasonal_weights[species] = weight * factors[month]
+
+    return seasonal_weights
+
+
+def get_tree_pollen_factor(pollen: PollenSignal):
+    index = pollen.treeIndex + pollen.grassIndex * 0.12 + pollen.weedIndex * 0.08
+    return clamp(1 + index * 0.083, 1.0, 1.5)
 
 
 def get_weather_boost(weather: WeatherSignal):
@@ -153,7 +240,7 @@ def get_species_match_boost(
 
 
 def build_rationale(
-    level: str,
+    level: ExposureLevel,
     profile: UserProfile,
     area_name: str,
     weather: WeatherSignal,

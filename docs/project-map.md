@@ -79,6 +79,8 @@ The user flow is:
 
 ## Backend Map
 
+`backend/app/*` is the only runtime backend path.
+
 - `backend/app/main.py`
   FastAPI app, CORS, and HTTP endpoints.
 - `backend/app/route_analysis.py`

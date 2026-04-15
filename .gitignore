@@ -1,11 +1,16 @@
 .next
 node_modules
 .venv
+.claude
+__pycache__/
+*.py[cod]
+.pytest_cache
 .env
 .env.local
 .env.production
 dist
 coverage
+*.tsbuildinfo
 *.log
 .chrome-readme-demo
 .chrome-tmp
