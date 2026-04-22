@@ -2,18 +2,32 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from functools import lru_cache
 from pathlib import Path
 
 from app.domain.geometry import distance_meters
 from app.schemas.models import LatLngLiteral, TreeGridCell, TreeGridData
 
-TREE_GRID_PATH = Path(__file__).resolve().parents[3] / "data" / "sample" / "tree-grid.sample.json"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+GENERATED_TREE_GRID_PATH = REPO_ROOT / "data" / "generated" / "tree-grid.generated.json"
+SAMPLE_TREE_GRID_PATH = REPO_ROOT / "data" / "sample" / "tree-grid.sample.json"
+
+
+def resolve_tree_grid_path():
+    configured = os.getenv("TREE_GRID_PATH", "").strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
+
+    if GENERATED_TREE_GRID_PATH.exists():
+        return GENERATED_TREE_GRID_PATH
+
+    return SAMPLE_TREE_GRID_PATH
 
 
 @lru_cache(maxsize=1)
 def get_tree_grid() -> TreeGridData:
-    with TREE_GRID_PATH.open("r", encoding="utf-8") as handle:
+    with resolve_tree_grid_path().open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     return TreeGridData.model_validate(payload)
 

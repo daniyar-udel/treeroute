@@ -1,7 +1,7 @@
 import unittest
 
 from app.domain.geometry import encode_polyline, sample_route_points
-from app.domain.scoring import merge_cells, score_routes
+from app.domain.scoring import get_relative_time_penalty, merge_cells, percentile_value, score_routes
 from app.schemas.models import GoogleRoute, LatLngLiteral, PollenSignal, RouteSignals, TreeGridCell, UserProfile, WeatherSignal
 
 WEATHER = WeatherSignal(
@@ -207,6 +207,9 @@ class ScoreRoutesTests(unittest.TestCase):
 
         self.assertIsNotNone(candidate.scoreBreakdown)
         self.assertEqual(candidate.scoreBreakdown.finalScore, candidate.exposureScore)
+        self.assertGreaterEqual(candidate.scoreBreakdown.dataCoverage, 0)
+        self.assertLessEqual(candidate.scoreBreakdown.dataCoverage, 1)
+        self.assertGreaterEqual(candidate.scoreBreakdown.highRiskMeters, 0)
 
 
 class GeometryAndWeightingTests(unittest.TestCase):
@@ -251,6 +254,15 @@ class GeometryAndWeightingTests(unittest.TestCase):
         self.assertEqual(merged["area_name"], "Near block")
         self.assertGreater(merged["canopy_score"], 50)
         self.assertEqual(merged["top_species"][0], "oak")
+
+    def test_percentile_value_interpolates_across_sorted_values(self):
+        value = percentile_value([10, 20, 30, 40], 0.9)
+
+        self.assertAlmostEqual(value, 37, places=1)
+
+    def test_relative_time_penalty_is_zero_for_fastest_route(self):
+        self.assertEqual(get_relative_time_penalty(15, 15), 0)
+        self.assertGreater(get_relative_time_penalty(20, 15), 0)
 
 
 if __name__ == "__main__":

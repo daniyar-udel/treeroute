@@ -37,8 +37,13 @@ export interface RouteHotspot {
 
 export interface RouteScoreBreakdown {
   treeExposure: number;
+  p90TreeExposure: number;
   peakTreeExposure: number;
   routeTimePenalty: number;
+  routeDetourMinutes: number;
+  highRiskMeters: number;
+  dataCoverage: number;
+  missingDataPenalty: number;
   pollenFactor: number;
   weatherFactor: number;
   sensitivityFactor: number;

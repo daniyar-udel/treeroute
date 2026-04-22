@@ -60,6 +60,7 @@ data/
 ```
 
 The current demo grid used by the backend lives at [data/sample/tree-grid.sample.json](./data/sample/tree-grid.sample.json).
+If [data/generated/tree-grid.generated.json](./data/generated/tree-grid.generated.json) exists, the backend will prefer it automatically.
 
 ## Runtime Architecture
 
@@ -106,8 +107,11 @@ GOOGLE_POLLEN_API_KEY=
 GOOGLE_WEATHER_API_KEY=
 GOOGLE_AI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
+TREE_GRID_PATH=
 CORS_ALLOW_ORIGINS=http://localhost:3000
 ```
+
+- `TREE_GRID_PATH` is optional. Set it when you want to force a specific tree-grid file; otherwise the backend prefers `data/generated/tree-grid.generated.json` and falls back to the checked-in sample grid.
 
 ## Run The App
 

@@ -24,8 +24,13 @@ const baseResponse: RouteAnalysisResponse = {
       hotspots: [],
       scoreBreakdown: {
         treeExposure: 8.4,
+        p90TreeExposure: 7.3,
         peakTreeExposure: 3.1,
         routeTimePenalty: 2.2,
+        routeDetourMinutes: 3,
+        highRiskMeters: 180,
+        dataCoverage: 0.92,
+        missingDataPenalty: 0.6,
         pollenFactor: 1.18,
         weatherFactor: 1.04,
         sensitivityFactor: 1,

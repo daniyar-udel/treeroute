@@ -27,10 +27,16 @@ from app.schemas.models import (
 )
 
 TREE_EXPOSURE_RADIUS_METERS = 20
-DEFAULT_BURDEN = 18
+MISSING_DATA_BASELINE_BURDEN = 10
 ROUTE_SAMPLE_SPACING_METERS = 60
 MIN_ROUTE_SAMPLES = 10
 MAX_ROUTE_SAMPLES = 40
+HIGH_RISK_BURDEN_THRESHOLD = 60
+TREE_EXPOSURE_WEIGHT = 0.22
+P90_TREE_EXPOSURE_WEIGHT = 0.1
+PEAK_TREE_EXPOSURE_WEIGHT = 0.06
+HIGH_RISK_DISTANCE_DIVISOR_METERS = 400
+MAX_MISSING_DATA_PENALTY = 8
 
 SENSITIVITY_MULTIPLIERS = {
     "low": 0.88,
@@ -67,7 +73,11 @@ def score_routes(
     current_month: int | None = None,
     route_signals: list[RouteSignals] | None = None,
 ):
+    if not routes:
+        return []
+
     month = normalize_month_index(current_month)
+    fastest_duration_min = min(route.durationMin for route in routes)
     scored = [
         score_single_route(
             route,
@@ -76,6 +86,7 @@ def score_routes(
             route_signals[index].weather if route_signals and index < len(route_signals) else weather,
             route_signals[index].pollen if route_signals and index < len(route_signals) else pollen,
             month,
+            fastest_duration_min,
         )
         for index, route in enumerate(routes)
     ]
@@ -89,6 +100,7 @@ def score_single_route(
     weather: WeatherSignal,
     pollen: PollenSignal,
     month: int,
+    fastest_duration_min: float,
 ):
     points = decode_polyline(route.polyline)
     sample_count = get_route_sample_count(route.distanceMeters)
@@ -97,12 +109,15 @@ def score_single_route(
     sensitivity = SENSITIVITY_MULTIPLIERS[profile.sensitivity]
     tree_matches = profile.triggers if profile.knowsTreeTriggers else []
     general_avoidance_mode = (not profile.knowsTreeTriggers) or (not tree_matches)
-    route_time_boost = clamp(route.durationMin / 36, 0.7, 1.25)
+    route_detour_minutes = max(route.durationMin - fastest_duration_min, 0)
+    route_time_penalty = get_relative_time_penalty(route.durationMin, fastest_duration_min)
     pollen_factor = get_tree_pollen_factor(pollen)
     weather_boost = get_weather_boost(weather)
 
     aggregate_burden = 0.0
     peak_burden = 0.0
+    burdens: list[float] = []
+    covered_points = 0
     dominant_area = "NYC corridor"
     dominant_risk = 0.0
     hotspots: list[RouteHotspot] = []
@@ -114,8 +129,9 @@ def score_single_route(
         area_name = "NYC corridor"
 
         if not cells:
-            burden = DEFAULT_BURDEN
+            burden = MISSING_DATA_BASELINE_BURDEN
         else:
+            covered_points += 1
             merged = merge_cells(cells, point, TREE_EXPOSURE_RADIUS_METERS)
             area_name = merged["area_name"]
             seasonal_weights = apply_seasonality(merged["species_weights"], month)
@@ -129,6 +145,7 @@ def score_single_route(
 
         aggregate_burden += burden
         peak_burden = max(peak_burden, burden)
+        burdens.append(burden)
 
         if burden >= dominant_risk:
             dominant_risk = burden
@@ -143,13 +160,23 @@ def score_single_route(
             )
         )
 
-    normalized_burden = aggregate_burden / len(sampled_points) if sampled_points else DEFAULT_BURDEN
-    tree_exposure = normalized_burden * 0.28
-    peak_tree_exposure = peak_burden * 0.12
-    route_time_penalty = route_time_boost * 3
-    tree_part = tree_exposure + peak_tree_exposure
+    normalized_burden = aggregate_burden / len(sampled_points) if sampled_points else MISSING_DATA_BASELINE_BURDEN
+    p90_burden = percentile_value(burdens, 0.9) if burdens else MISSING_DATA_BASELINE_BURDEN
+    data_coverage = covered_points / len(sampled_points) if sampled_points else 0.0
+    high_risk_meters = (
+        route.distanceMeters * (sum(1 for burden in burdens if burden >= HIGH_RISK_BURDEN_THRESHOLD) / len(burdens))
+        if burdens
+        else 0.0
+    )
+    missing_data_penalty = (1 - data_coverage) * MAX_MISSING_DATA_PENALTY
+
+    tree_exposure = normalized_burden * TREE_EXPOSURE_WEIGHT
+    p90_tree_exposure = p90_burden * P90_TREE_EXPOSURE_WEIGHT
+    peak_tree_exposure = peak_burden * PEAK_TREE_EXPOSURE_WEIGHT
+    high_risk_corridor_penalty = clamp(high_risk_meters / HIGH_RISK_DISTANCE_DIVISOR_METERS, 0, 6)
+    tree_part = tree_exposure + p90_tree_exposure + peak_tree_exposure + high_risk_corridor_penalty
     score = clamp(
-        (tree_part * pollen_factor + route_time_penalty) * sensitivity * weather_boost,
+        tree_part * pollen_factor * sensitivity * weather_boost + route_time_penalty + missing_data_penalty,
         8,
         98,
     )
@@ -165,12 +192,17 @@ def score_single_route(
         exposureScore=rounded_score,
         exposureLevel=exposure_level,
         explanation="",
-        rationale=build_rationale(exposure_level, profile, dominant_area, weather, pollen),
+        rationale=build_rationale(exposure_level, profile, dominant_area, weather, pollen, data_coverage),
         hotspots=sorted(hotspots, key=lambda item: item.risk, reverse=True)[:3],
         scoreBreakdown=RouteScoreBreakdown(
             treeExposure=round_value(tree_exposure, 1),
+            p90TreeExposure=round_value(p90_tree_exposure, 1),
             peakTreeExposure=round_value(peak_tree_exposure, 1),
             routeTimePenalty=round_value(route_time_penalty, 1),
+            routeDetourMinutes=round_value(route_detour_minutes, 1),
+            highRiskMeters=round_value(high_risk_meters, 0),
+            dataCoverage=round_value(data_coverage, 2),
+            missingDataPenalty=round_value(missing_data_penalty, 1),
             pollenFactor=round_value(pollen_factor, 2),
             weatherFactor=round_value(weather_boost, 2),
             sensitivityFactor=round_value(sensitivity, 2),
@@ -202,6 +234,27 @@ def get_route_sample_count(distance_meters: float):
             MAX_ROUTE_SAMPLES,
         )
     )
+
+
+def percentile_value(values: list[float], percentile: float):
+    if not values:
+        return 0.0
+
+    ordered_values = sorted(values)
+    if len(ordered_values) == 1:
+        return ordered_values[0]
+
+    position = clamp(percentile, 0, 1) * (len(ordered_values) - 1)
+    lower_index = math.floor(position)
+    upper_index = math.ceil(position)
+
+    if lower_index == upper_index:
+        return ordered_values[lower_index]
+
+    interpolation_weight = position - lower_index
+    return ordered_values[lower_index] + (
+        ordered_values[upper_index] - ordered_values[lower_index]
+    ) * interpolation_weight
 
 
 def merge_cells(
@@ -279,6 +332,14 @@ def get_tree_pollen_factor(pollen: PollenSignal):
     return clamp(1 + index * 0.083, 1.0, 1.5)
 
 
+def get_relative_time_penalty(duration_min: float, fastest_duration_min: float):
+    if fastest_duration_min <= 0:
+        return 0.0
+
+    relative_detour = max(duration_min - fastest_duration_min, 0) / max(fastest_duration_min, 1)
+    return clamp(relative_detour * 12, 0, 8)
+
+
 def get_weather_boost(weather: WeatherSignal):
     wind_factor = 1 + weather.windSpeedMph / 55
     humidity_factor = 1 - clamp((weather.humidity - 40) / 220, 0, 0.22)
@@ -319,6 +380,7 @@ def build_rationale(
     area_name: str,
     weather: WeatherSignal,
     pollen: PollenSignal,
+    data_coverage: float,
 ):
     lines = [f"{area_name} has elevated street-tree density relative to nearby blocks."]
 
@@ -327,7 +389,9 @@ def build_rationale(
     else:
         lines.append("No tree species were selected, so this route minimizes overall contact with trees.")
 
-    if pollen.treeIndex >= 4 or weather.windSpeedMph >= 12:
+    if data_coverage < 0.7:
+        lines.append("Tree-grid coverage is thinner on parts of this walk, so the score is less certain than usual.")
+    elif pollen.treeIndex >= 4 or weather.windSpeedMph >= 12:
         lines.append(
             f"Tree pollen is elevated and wind is around {round_value(weather.windSpeedMph, 0)} mph, so spread risk is higher on exposed blocks."
         )

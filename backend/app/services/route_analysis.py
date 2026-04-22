@@ -33,6 +33,8 @@ from app.schemas.models import (
     WeatherSignal,
 )
 
+ROUTE_SIGNAL_SAMPLE_COUNT = 5
+
 
 async def analyze_route_request(request: RouteAnalysisRequest) -> RouteAnalysisResponse:
     validate_request(request)
@@ -199,7 +201,7 @@ async def build_route_signal_context(
 
 def build_route_signal_points(route: GoogleRoute):
     points = decode_polyline(route.polyline)
-    return sample_route_points(points, 3)
+    return sample_route_points(points, ROUTE_SIGNAL_SAMPLE_COUNT)
 
 
 def build_point_cache_key(point: LatLngLiteral):
