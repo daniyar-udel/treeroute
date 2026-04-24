@@ -59,6 +59,7 @@ def main():
     }
     lat_step = 0.00018
     lng_step = 0.00024
+    cell_size_meters = round(((lat_step * 111_000) + (lng_step * 84_000)) / 2)
 
     buckets: dict[str, dict] = {}
     for point in points:
@@ -112,7 +113,7 @@ def main():
         "origin": origin,
         "latStep": lat_step,
         "lngStep": lng_step,
-        "cellSizeMeters": 1100,
+        "cellSizeMeters": cell_size_meters,
         "cells": cells,
     }
 

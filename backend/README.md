@@ -52,6 +52,8 @@ cd backend
 ..\.venv\Scripts\python.exe scripts\data\build_tree_grid.py ..\StreetTreeCensus.csv ..\data\generated\tree-grid.generated.json
 ```
 
+Set `TREE_GRID_PATH` in `.env.local` if you want to force a specific grid file. Otherwise the backend prefers `data/generated/tree-grid.generated.json` when present and falls back to the checked-in sample grid.
+
 ## Docker
 
 Build from the repository root:

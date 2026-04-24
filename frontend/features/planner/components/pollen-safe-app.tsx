@@ -237,12 +237,28 @@ export function PollenSafeApp() {
                           <strong>{route.scoreBreakdown.treeExposure.toFixed(1)}</strong>
                         </div>
                         <div className="score-breakdown-item">
+                          <span>P90 corridor</span>
+                          <strong>{route.scoreBreakdown.p90TreeExposure.toFixed(1)}</strong>
+                        </div>
+                        <div className="score-breakdown-item">
                           <span>Peak pocket</span>
                           <strong>{route.scoreBreakdown.peakTreeExposure.toFixed(1)}</strong>
                         </div>
                         <div className="score-breakdown-item">
-                          <span>Walk time</span>
-                          <strong>{route.scoreBreakdown.routeTimePenalty.toFixed(1)}</strong>
+                          <span>Detour</span>
+                          <strong>
+                            +{route.scoreBreakdown.routeDetourMinutes.toFixed(1)} min / {route.scoreBreakdown.routeTimePenalty.toFixed(1)}
+                          </strong>
+                        </div>
+                        <div className="score-breakdown-item">
+                          <span>Risk corridor</span>
+                          <strong>{route.scoreBreakdown.highRiskMeters.toFixed(0)} m</strong>
+                        </div>
+                        <div className="score-breakdown-item">
+                          <span>Coverage</span>
+                          <strong>
+                            {Math.round(route.scoreBreakdown.dataCoverage * 100)}% / +{route.scoreBreakdown.missingDataPenalty.toFixed(1)}
+                          </strong>
                         </div>
                         <div className="score-breakdown-item">
                           <span>Pollen</span>

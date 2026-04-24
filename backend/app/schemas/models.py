@@ -53,8 +53,13 @@ class RouteHotspot(BaseModel):
 
 class RouteScoreBreakdown(BaseModel):
     treeExposure: float
+    p90TreeExposure: float
     peakTreeExposure: float
     routeTimePenalty: float
+    routeDetourMinutes: float
+    highRiskMeters: float
+    dataCoverage: float
+    missingDataPenalty: float
     pollenFactor: float
     weatherFactor: float
     sensitivityFactor: float
